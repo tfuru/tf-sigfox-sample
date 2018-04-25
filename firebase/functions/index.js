@@ -77,7 +77,9 @@ exports.sensit = functions.https.onRequest((req, res) => {
   //Battery LSB 2byt目の 3,2,1,0
   let batteryLSB = parseInt(formatByArr("{0}{1}{2}{3}",String((b2>>3)&0b1),String((b2>>2)&0b1),String((b2>>1)&0b1),String(b2&0b1)),2); // 0111
 
-  let battery = parseInt(formatByArr("{0}{1}",batteryMSB,batteryLSB),2)*0.05*2.7;
+  v = formatByArr("{0}{1}",batteryMSB,batteryLSB);
+  let battery = parseInt(v,2)*0.05*2.7;
+  console.log("battery ", v, battery);
 
   //T° MSB 2byt目の 7,6,5,4
   let tMSB = parseInt(formatByArr("{0}{1}{2}{3}",String((b2>>7)&0b1),String((b2>>6)&0b1),String((b2>>5)&0b1),String((b2>>4)&0b1)),2); //0110
@@ -85,7 +87,7 @@ exports.sensit = functions.https.onRequest((req, res) => {
 
   //T° LSB 3byt目の 5,4,3,2,1,0
   let tLSB = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",String((b3>>5)&0b1),String((b3>>4)&0b1),String((b3>>3)&0b1),String((b3>>2)&0b1),String((b3>>1)&0b1),String(b3&0b1)),2); //001101
-  let t = (parseInt(formatByArr("{0}{1}",tMSB,tLSB),2)-200)/8;
+  let t = 0; //(parseInt(formatByArr("{0}{1}",tMSB,tLSB),2)-200)/8;
 
   //Reed Switch state mode=5, 3byt目の 6
   let reedSwitchState = (mode != 5)?0:parseInt(formatByArr("{0}",String((b3>>6)&0b1)),2); //1
