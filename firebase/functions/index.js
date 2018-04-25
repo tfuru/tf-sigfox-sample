@@ -46,7 +46,7 @@ exports.sensit = functions.https.onRequest((req, res) => {
   splitByLength(req.query.data,2).forEach(function(v, i, a){
     dataArr[i] = hexToByte(v);
   });
-  console.log("dataArr ",dataArr);
+  console.log("data ", req.query.data, dataArr);
   let data = new Buffer(dataArr);
 
   //Uplink パケットをフォーマットに従って解析
@@ -60,64 +60,123 @@ exports.sensit = functions.https.onRequest((req, res) => {
   console.log("b4 ",b4.toString(2)); // 00011001
 
   //mode 1byte目の 2,1,0
-  let v = formatByArr("{0}{1}{2}",String((b1>>2)&0b1),String((b1>>1)&0b1),String(b1&0b1));
+  let v = formatByArr("{0}{1}{2}",((b1>>2)&0b1),((b1>>1)&0b1),(b1&0b1));
   let mode = parseInt(v,2); // 1
   //console.log("mode ",v,mode);
 
   //TimeFrame 1byte目の 4,3
-  v = formatByArr("{0}{1}",String((b1>>4)&0b1),String((b1>>3)&0b1));
+  v = formatByArr("{0}{1}",((b1>>4)&0b1),((b1>>3)&0b1));
   let timeFrame = parseInt(v,2); //1
   //console.log("timeFrame ", v, timeFrame);
 
   //type 1byte目の 6,5
-  let type = parseInt(formatByArr("{0}{1}",String((b1>>6)&0b1),String((b1>>5)&0b1)),2); //1
+  let type = parseInt(formatByArr("{0}{1}",
+                        ((b1>>6)&0b1),
+                        ((b1>>5)&0b1)),2); //1
+
   //Battery MSB 1byte目の 7
-  let batteryMSB = parseInt(formatByArr("{0}",String((b1>>7)&0b1),2)); //1
+  let batteryMSB = String(formatByArr("{0}",((b1>>7)&0b1))); //1
 
   //Battery LSB 2byt目の 3,2,1,0
-  let batteryLSB = parseInt(formatByArr("{0}{1}{2}{3}",String((b2>>3)&0b1),String((b2>>2)&0b1),String((b2>>1)&0b1),String(b2&0b1)),2); // 0111
+  let batteryLSB = String(formatByArr("{0}{1}{2}{3}",
+                                ((b2>>3)&0b1),
+                                ((b2>>2)&0b1),
+                                ((b2>>1)&0b1),
+                                (b2&0b1))); // 0111
 
-  v = formatByArr("{0}{1}",batteryMSB,batteryLSB);
+  v = batteryMSB+batteryLSB;
   let battery = parseInt(v,2)*0.05*2.7;
-  console.log("battery ", v, battery);
+  //console.log("battery ", v, batteryMSB, batteryLSB, battery);
 
   //T° MSB 2byt目の 7,6,5,4
-  let tMSB = parseInt(formatByArr("{0}{1}{2}{3}",String((b2>>7)&0b1),String((b2>>6)&0b1),String((b2>>5)&0b1),String((b2>>4)&0b1)),2); //0110
-  let tmsb = (tMSB*6.4)-20;
+  let tMSB = String(formatByArr("{0}{1}{2}{3}",
+                      ((b2>>7)&0b1),
+                      ((b2>>6)&0b1),
+                      ((b2>>5)&0b1),
+                      ((b2>>4)&0b1))); //0110
+  let tmsb = (parseInt(tMSB,2)*6.4)-20.0;
 
   //T° LSB 3byt目の 5,4,3,2,1,0
-  let tLSB = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",String((b3>>5)&0b1),String((b3>>4)&0b1),String((b3>>3)&0b1),String((b3>>2)&0b1),String((b3>>1)&0b1),String(b3&0b1)),2); //001101
-  let t = 0; //(parseInt(formatByArr("{0}{1}",tMSB,tLSB),2)-200)/8;
+  let tLSB = String(formatByArr("{0}{1}{2}{3}{4}{5}",
+                      ((b3>>5)&0b1),
+                      ((b3>>4)&0b1),
+                      ((b3>>3)&0b1),
+                      ((b3>>2)&0b1),
+                      ((b3>>1)&0b1),
+                      (b3&0b1))); //001101
+  let t = (parseInt((tMSB+tLSB),2)-200)/8;
+  console.log("t ", tMSB, tmsb, tLSB, t);
 
   //Reed Switch state mode=5, 3byt目の 6
-  let reedSwitchState = (mode != 5)?0:parseInt(formatByArr("{0}",String((b3>>6)&0b1)),2); //1
+  let reedSwitchState = (mode != 5)?0:parseInt(formatByArr("{0}",((b3>>6)&0b1)),2); //1
+  console.log("reedSwitchState ", reedSwitchState);
+
   //Multiplier light mode=2, 3byt目の 7,6
-  let multiplierLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}",String((b3>>7)&0b1),String((b3>>6)&0b1)),2); //1
+  let multiplierLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}",
+                                      ((b3>>7)&0b1),
+                                      ((b3>>6)&0b1)),2); //1
+  console.log("multiplierLight ", multiplierLight);
+
   //Value light mode=2, 3byt目の 5,4,3,2,1,0
-  let valueLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",String((b3>>5)&0b1),String((b3>>4)&0b1),String((b3>>3)&0b1),String((b3>>2)&0b1),String((b3>>1)&0b1),String(b3&0b1)),2); //1
+  let valueLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",
+                                        ((b3>>5)&0b1),
+                                        ((b3>>4)&0b1),
+                                        ((b3>>3)&0b1),
+                                        ((b3>>2)&0b1),
+                                        ((b3>>1)&0b1),
+                                        (b3&0b1)),2); //1
+  console.log("valueLight ", valueLight);
 
-  //Humidity 4byt目の 5,4,3,2,1,0
-  let humidity = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",String((b4>>5)&0b1),String((b4>>4)&0b1),String((b4>>3)&0b1),String((b4>>2)&0b1),String((b4>>1)&0b1),String(b4&0b1)),2); //0001100
+  //Humidity mode=1,4byt目の 7,6,5,4,3,2,1,0
+  v = String(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",
+                    ((b4>>7)&0b1),
+                    ((b4>>6)&0b1),
+                    ((b4>>5)&0b1),
+                    ((b4>>4)&0b1),
+                    ((b4>>3)&0b1),
+                    ((b4>>2)&0b1),
+                    ((b4>>1)&0b1),
+                    (b4&0b1)));//0001100
+  let humidity = (mode==1)?0:parseInt(v,2)*0.5/100;
+  console.log("humidity ", v, humidity );
+
   //Minor version mode=0,4byte目の 7,6,5
-  let minorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}",String((b4>>7)&0b1),String((b4>>6)&0b1),String((b4>>5)&0b1)),2);
+  let minorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}",
+                                          ((b4>>7)&0b1),
+                                          ((b4>>6)&0b1),
+                                          ((b4>>5)&0b1)),2);
   //Major version mode=0,4byte目の 4,3,2,1,0
-  let majorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}",String((b4>>4)&0b1),String((b4>>3)&0b1),String((b4>>2)&0b1),String((b4>>1)&0b1),String(b4&0b1)),2);
+  let majorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}",
+                                            ((b4>>4)&0b1),
+                                            ((b4>>3)&0b1),
+                                            ((b4>>2)&0b1),
+                                            ((b4>>1)&0b1),
+                                            (b4&0b1)),2);
   //Nb of alerts mode=0|1, 4byte目の 7,6,5,4,3,2,1,0
-  let nbOfAlerts = (mode==0|mode==1)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",String((b4>>7)&0b1),String((b4>>6)&0b1),String((b4>>5)&0b1),String((b4>>4)&0b1),String((b4>>3)&0b1),String((b4>>2)&0b1),String((b4>>1)&0b1),String(b4&0b1)),2);
+  let nbOfAlerts = (mode==0|mode==1)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",
+                                                  ((b4>>7)&0b1),
+                                                  ((b4>>6)&0b1),
+                                                  ((b4>>5)&0b1),
+                                                  ((b4>>4)&0b1),
+                                                  ((b4>>3)&0b1),
+                                                  ((b4>>2)&0b1),
+                                                  ((b4>>1)&0b1),
+                                                  (b4&0b1)),2);
 
-  let result = {"mode":mode,
-                        "timeFrame":timeFrame,
-                        "type":type,
-                        "battery":battery,
-                        "tMSB":tmsb,
-                        "t":t,
-                        "reedSwitchState":reedSwitchState,
-                        "multiplierLight":multiplierLight,
-                        "valueLight":valueLight,
-                        "humidity":humidity,
-                        "minorVersion":minorVersion,
-                        "majorVersion":majorVersion,
-                        "nbOfAlerts":nbOfAlerts};
+  let result = {"data":req.query.data,
+                "mode":mode,
+                "timeFrame":timeFrame,
+                "type":type,
+                "battery":battery,
+                "tmsb":tmsb,
+                "t":t,
+                "reedSwitchState":reedSwitchState,
+                "multiplierLight":multiplierLight,
+                "valueLight":valueLight,
+                "humidity":humidity,
+                "minorVersion":minorVersion,
+                "majorVersion":majorVersion,
+                "nbOfAlerts":nbOfAlerts};
 
   console.log("result",result);
 
