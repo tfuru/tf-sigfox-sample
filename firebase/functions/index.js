@@ -141,27 +141,28 @@ exports.sensit = functions.https.onRequest((req, res) => {
   //console.log("humidity ", v, humidity );
 
   //Minor version mode=0,4byte目の 7,6,5
-  let minorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}",
-                                          ((b4>>7)&0b1),
-                                          ((b4>>6)&0b1),
-                                          ((b4>>5)&0b1)),2);
+  v = formatByArr("{0}{1}{2}",((b4>>7)&0b1),
+                              ((b4>>6)&0b1),
+                              ((b4>>5)&0b1));
+  let minorVersion = (mode==0)?0:parseInt(v,2);
+
   //Major version mode=0,4byte目の 4,3,2,1,0
-  let majorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}",
-                                            ((b4>>4)&0b1),
-                                            ((b4>>3)&0b1),
-                                            ((b4>>2)&0b1),
-                                            ((b4>>1)&0b1),
-                                            (b4&0b1)),2);
+  v = formatByArr("{0}{1}{2}{3}{4}",((b4>>4)&0b1),
+                                    ((b4>>3)&0b1),
+                                    ((b4>>2)&0b1),
+                                    ((b4>>1)&0b1),
+                                    (b4&0b1));
+  let majorVersion = (mode==0)?0:parseInt(v,2);
   //Nb of alerts mode=0|1, 4byte目の 7,6,5,4,3,2,1,0
-  let nbOfAlerts = (mode==0|mode==1)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",
-                                                  ((b4>>7)&0b1),
-                                                  ((b4>>6)&0b1),
-                                                  ((b4>>5)&0b1),
-                                                  ((b4>>4)&0b1),
-                                                  ((b4>>3)&0b1),
-                                                  ((b4>>2)&0b1),
-                                                  ((b4>>1)&0b1),
-                                                  (b4&0b1)),2);
+  v = formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",((b4>>7)&0b1),
+                                             ((b4>>6)&0b1),
+                                             ((b4>>5)&0b1),
+                                             ((b4>>4)&0b1),
+                                             ((b4>>3)&0b1),
+                                             ((b4>>2)&0b1),
+                                             ((b4>>1)&0b1),
+                                             (b4&0b1));
+  let nbOfAlerts = (mode==0|mode==1)?0:parseInt(v,2);
 
   let result = {"data":req.query.data,
                 "mode":mode,
