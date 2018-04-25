@@ -54,51 +54,54 @@ exports.sensit = functions.https.onRequest((req, res) => {
   let b2 = data.readUInt8(1);
   let b3 = data.readUInt8(2);
   let b4 = data.readUInt8(3);
-  console.log("b1 ",b1.toString(2));
-  console.log("b2 ",b2.toString(2));
-  console.log("b3 ",b2.toString(2));
-  console.log("b4 ",b2.toString(2));
+  console.log("b1 ",b1.toString(2)); // 10101001
+  console.log("b2 ",b2.toString(2)); // 1100111
+  console.log("b3 ",b3.toString(2)); // 1101
+  console.log("b4 ",b4.toString(2)); // 11001
 
   //mode 1byte目の 2,1,0
-  let mode = parseInt(formatByArr("{0}{1}{2}",b1&0x00000100,b1&0x00000010,b1&0x00000001),2); // 1
-  console.log("mode ",mode.toString(2),mode);
+  let v = formatByArr("{0}{1}{2}",String(b1&0x00000100),String(b1&0x00000010),String(b1&0x00000001));
+  let mode = parseInt(v,2); // 1
+  console.log("mode ",v,mode);
 
   //TimeFrame 1byte目の 4,3
-  let timeFrame = parseInt(formatByArr("{0}{1}",b1&0x00010000,b1&0x00001000)); //1
+  v = formatByArr("{0}{1}",String(b1&0x00010000),String(b1&0x00001000));
+  let timeFrame = parseInt(v,2); //1
+  console.log("timeFrame ",v,timeFrame);
 
   //type 1byte目の 6,5
-  let type = parseInt(formatByArr("{0}{1}",b1&0x01000000,b1&0x00100000)); //1
+  let type = parseInt(formatByArr("{0}{1}",b1&0x01000000,b1&0x00100000),2); //1
   //Battery MSB 1byte目の 7
-  let batteryMSB = parseInt(formatByArr("{0}",b1&0x10000000)); //1
+  let batteryMSB = parseInt(formatByArr("{0}",b1&0x10000000),2); //1
 
   //Battery LSB 2byt目の 3,2,1,0
-  let batteryLSB = parseInt(formatByArr("{0}{1}{2}{3}",b2&0x00001000,b2&0x00000100,b2&0x00000010,b2&0x00000001)); // 0111
+  let batteryLSB = parseInt(formatByArr("{0}{1}{2}{3}",b2&0x00001000,b2&0x00000100,b2&0x00000010,b2&0x00000001),2); // 0111
 
-  let battery = parseInt(formatByArr("{0}{1}",batteryMSB,batteryLSB))*0.05*2.7;
+  let battery = parseInt(formatByArr("{0}{1}",batteryMSB,batteryLSB),2)*0.05*2.7;
 
   //T° MSB 2byt目の 7,6,5,4
-  let tMSB = parseInt(formatByArr("{0}{1}{2}{3}",b2&0x10000000,b2&0x01000000,b2&0x00100000,b2&0x00100000)); //0110
+  let tMSB = parseInt(formatByArr("{0}{1}{2}{3}",b2&0x10000000,b2&0x01000000,b2&0x00100000,b2&0x00100000),2); //0110
   let tmsb = (tMSB*6.4)-20;
 
   //T° LSB 3byt目の 5,4,3,2,1,0
-  let tLSB = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",b3&0x00100000,b3&0x00010000,b3&0x00001000,b3&0x00000100,b3&0x00000010,b3&0x00000001)); //001101
-  let t = (parseInt(formatByArr("{0}{1}",tMSB,tLSB))-200)/8;
+  let tLSB = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",b3&0x00100000,b3&0x00010000,b3&0x00001000,b3&0x00000100,b3&0x00000010,b3&0x00000001),2); //001101
+  let t = (parseInt(formatByArr("{0}{1}",tMSB,tLSB),2)-200)/8;
 
   //Reed Switch state mode=5, 3byt目の 6
-  let reedSwitchState = (mode != 5)?0:parseInt(formatByArr("{0}",b3&0x01000000)); //1
+  let reedSwitchState = (mode != 5)?0:parseInt(formatByArr("{0}",b3&0x01000000),2); //1
   //Multiplier light mode=2, 3byt目の 7,6
-  let multiplierLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}",b3&0x10000000,b3&0x01000000)); //1
+  let multiplierLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}",b3&0x10000000,b3&0x01000000),2); //1
   //Value light mode=2, 3byt目の 5,4,3,2,1,0
-  let valueLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",b3&0x00100000,b3&0x00010000,b3&0x00001000,b3&0x00000100,b3&0x00000010,b3&0x00000001)); //1
+  let valueLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",b3&0x00100000,b3&0x00010000,b3&0x00001000,b3&0x00000100,b3&0x00000010,b3&0x00000001),2); //1
 
   //Humidity 4byt目の 5,4,3,2,1,0
-  let humidity = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",b4&0x00100000,b4&0x00010000,b4&0x00001000,b4&0x00000100,b4&0x00000010,b4&0x00000001)); //0001100
+  let humidity = parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",b4&0x00100000,b4&0x00010000,b4&0x00001000,b4&0x00000100,b4&0x00000010,b4&0x00000001),2); //0001100
   //Minor version mode=0,4byte目の 7,6,5
-  let minorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}",b4&0x10000000,b4&0x01000000,b4&0x00100000));;
+  let minorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}",b4&0x10000000,b4&0x01000000,b4&0x00100000),2);
   //Major version mode=0,4byte目の 4,3,2,1,0
-  let majorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}",b4&0x00010000,b4&0x00001000,b4&0x00000100,b4&0x00000010,b4&0x00000001));
+  let majorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}",b4&0x00010000,b4&0x00001000,b4&0x00000100,b4&0x00000010,b4&0x00000001),2);
   //Nb of alerts mode=0|1, 4byte目の 7,6,5,4,3,2,1,0
-  let nbOfAlerts = (mode==0|mode==1)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",b4&0x10000000,b4&0x01000000,b4&0x00100000,b4&0x00010000,b4&0x00001000,b4&0x00000100,b4&0x00000010,b4&0x00000001));;
+  let nbOfAlerts = (mode==0|mode==1)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",b4&0x10000000,b4&0x01000000,b4&0x00100000,b4&0x00010000,b4&0x00001000,b4&0x00000100,b4&0x00000010,b4&0x00000001),2);
 
   let result = {"mode":mode,
                         "timeFrame":timeFrame,
