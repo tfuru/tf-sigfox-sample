@@ -105,17 +105,17 @@ exports.sensit = functions.https.onRequest((req, res) => {
                       ((b3>>1)&0b1),
                       (b3&0b1))); //001101
   let t = (parseInt((tMSB+tLSB),2)-200)/8;
-  console.log("t ", tMSB, tmsb, tLSB, t);
+  //console.log("t ", tMSB, tmsb, tLSB, t);
 
   //Reed Switch state mode=5, 3byt目の 6
   let reedSwitchState = (mode != 5)?0:parseInt(formatByArr("{0}",((b3>>6)&0b1)),2); //1
-  console.log("reedSwitchState ", reedSwitchState);
+  //console.log("reedSwitchState ", reedSwitchState);
 
   //Multiplier light mode=2, 3byt目の 7,6
   let multiplierLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}",
                                       ((b3>>7)&0b1),
                                       ((b3>>6)&0b1)),2); //1
-  console.log("multiplierLight ", multiplierLight);
+  //console.log("multiplierLight ", multiplierLight);
 
   //Value light mode=2, 3byt目の 5,4,3,2,1,0
   let valueLight = (mode != 2)?0:parseInt(formatByArr("{0}{1}{2}{3}{4}{5}",
@@ -125,7 +125,7 @@ exports.sensit = functions.https.onRequest((req, res) => {
                                         ((b3>>2)&0b1),
                                         ((b3>>1)&0b1),
                                         (b3&0b1)),2); //1
-  console.log("valueLight ", valueLight);
+  //console.log("valueLight ", valueLight);
 
   //Humidity mode=1,4byt目の 7,6,5,4,3,2,1,0
   v = String(formatByArr("{0}{1}{2}{3}{4}{5}{6}{7}",
@@ -138,7 +138,7 @@ exports.sensit = functions.https.onRequest((req, res) => {
                     ((b4>>1)&0b1),
                     (b4&0b1)));//0001100
   let humidity = (mode==1)?0:parseInt(v,2)*0.5/100;
-  console.log("humidity ", v, humidity );
+  //console.log("humidity ", v, humidity );
 
   //Minor version mode=0,4byte目の 7,6,5
   let minorVersion = (mode==0)?0:parseInt(formatByArr("{0}{1}",
